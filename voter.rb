@@ -1,32 +1,25 @@
 require "selenium-webdriver"
 require "httparty"
-require "io/console"
+require "colorize"
 
 browser = Selenium::WebDriver.for :chrome
 wait = Selenium::WebDriver::Wait.new(:timeout => 1)
 
-loop do
-  browser.navigate.to "https://www.github.com/login/"
-  puts "Enter Github login:"
-  login = STDIN.gets
-  puts "Enter Github password:"
-  password = STDIN.noecho(&:gets)
-
-  login_user = wait.until { browser.find_element(:name, "login") }
-  login_pass = wait.until { browser.find_element(:name, "password") }
-
-  login_user.send_keys(login.chomp)
-  login_pass.send_keys(password.chomp)
-  login_pass.submit
-
-  logged_in = wait.until { browser.find_element(:class, "logged-in") } rescue nil
-  puts logged_in  ? "login success!" : "login failed, retrying"
-  break if logged_in
+puts "Enter Codewars username:".colorize(:color=>:blue, :background=>:white)
+username = STDIN.gets.chomp
+token = ENV['CODEWARS_TOKEN']
+if token
+  puts "CODEWARS_TOKEN read from Environment Variable".colorize(:green)
+else
+  puts "Environment variable: \"CODEWARS_TOKEN\" not found. Enter Codewars auth token:"
+          .colorize(:color=>:blue, :background=>:white)
+  token = STDIN.gets.chomp
 end
 
-browser.navigate.to "https://www.codewars.com/users/preauth/github/signin"
-profile_link = wait.until { browser.find_element(:id, "header_profile_link") }
-username = profile_link.attribute("href").sub("https://www.codewars.com/users/", '')
+
+browser.navigate.to "https://www.codewars.com/users/#{username}"
+cookie = browser.manage.add_cookie(:name => "remember_user_token", :value => token)
+browser.navigate.to "https://www.codewars.com/users/#{username}"
 
 api_url = "https://www.codewars.com/api/v1/users/" + username
 response = HTTParty.get(api_url).parsed_response
