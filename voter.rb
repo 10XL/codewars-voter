@@ -83,6 +83,11 @@ threads = []
 end
 threads.each { |t| t.join}
 
+if !errors.empty?
+  file_name = "#{Time.now.strftime('%Y-%m-%d-%H-%M-%S')}_failed.log"
+  File.open(file_name, 'w') { |f| errors.each { |id, err| f.write("#{id}, #{err}\n") } }
+  puts "\n"+"errors found and logged to #{file_name}".colorize(:background=>:red)
+end
 
 puts "Finished!\nPress RETURN to quit"
 STDIN.gets
