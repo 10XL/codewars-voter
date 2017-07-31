@@ -25,15 +25,16 @@ api_url = "https://www.codewars.com/api/v1/users/" + username
 response = HTTParty.get(api_url).parsed_response
 total_items = response['codeChallenges']['totalCompleted']
 total_pages = (total_items + 200 - 1) / 200
-kata_ids = {}
-
-puts "total_pages: #{total_pages}, total_items: #{total_items}\nfetching katas:"
+puts "total_items: #{total_items}, total_pages: #{total_pages}\nfetching katas:".colorize(:green)
+kata_ids = []
 threads = []
+
+
 (0...total_pages).each do |i|
   threads << Thread.new do
     url = api_url + "/code-challenges/completed?page=#{i}"
-    HTTParty.get(url).parsed_response['data'].each { |kata| kata_ids[kata['id']] = nil }
-    puts "request completed: #{url}\n#{kata_ids.size}/#{total_items} received\n"
+    HTTParty.get(url).parsed_response['data'].each { |kata| kata_ids << kata['id'] }
+    puts "request completed: #{url}\n#{kata_ids.size}/#{total_items} received\n".colorize(:green)
   end
 end
 threads.each { |t| t.join }
